@@ -1,5 +1,4 @@
 name: Deploy AKS
-
 on:
   push:
     branches:
@@ -19,9 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: development
     env:
-      ARM_CLIENT_ID: 34ecc9d5-46a4-44c7-8e04-0f6915148c00
-      ARM_TENANT_ID: 1e982994-ab22-436c-8dce-4e3ee2c28c9e
-      ARM_SUBSCRIPTION_ID: cb3e704f-7386-4f22-9aad-9d87aee0460a
+      ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
       ARM_USE_OIDC: "true"
       TF_STATE_RESOURCE_GROUP: ${{ vars.TF_STATE_RESOURCE_GROUP }}
       TF_STATE_STORAGE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
@@ -36,9 +35,9 @@ jobs:
       - name: Sign in to Azure with OIDC
         uses: azure/login@v2
         with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Initialize Terraform
         run: |
@@ -67,13 +66,13 @@ jobs:
   #   needs: deploy-dev
   #   environment: production
   #   env:
-  #     ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-  #     ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-  #     ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  #     ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  #     ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  #     ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   #     ARM_USE_OIDC: "true"
-  #     TF_STATE_RESOURCE_GROUP: ${{ vars.TF_STATE_RESOURCE_GROUP }}
-  #     TF_STATE_STORAGE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
-  #     TF_STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
+  #     TF_STATE_RESOURCE_GROUP: ${{ secrets.TF_STATE_RESOURCE_GROUP }}
+  #     TF_STATE_STORAGE_ACCOUNT: ${{ secrets.TF_STATE_STORAGE_ACCOUNT }}
+  #     TF_STATE_CONTAINER: ${{ secrets.TF_STATE_CONTAINER }}
   #   steps:
   #     - name: Check out repository
   #       uses: actions/checkout@v4
@@ -84,9 +83,9 @@ jobs:
   #     - name: Sign in to Azure with OIDC
   #       uses: azure/login@v2
   #       with:
-  #         client-id: ${{ vars.AZURE_CLIENT_ID }}
-  #         tenant-id: ${{ vars.AZURE_TENANT_ID }}
-  #         subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  #         client-id: ${{ secrets.AZURE_CLIENT_ID }}
+  #         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+  #         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   #     - name: Initialize Terraform
   #       run: |
