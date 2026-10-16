@@ -1,0 +1,110 @@
+name: Deploy AKS
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: aks-deployment-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-dev:
+    name: Deploy dev
+    runs-on: ubuntu-latest
+    environment: development
+    env:
+      ARM_CLIENT_ID: 34ecc9d5-46a4-44c7-8e04-0f6915148c00
+      ARM_TENANT_ID: 1e982994-ab22-436c-8dce-4e3ee2c28c9e
+      ARM_SUBSCRIPTION_ID: cb3e704f-7386-4f22-9aad-9d87aee0460a
+      ARM_USE_OIDC: "true"
+      TF_STATE_RESOURCE_GROUP: ${{ vars.TF_STATE_RESOURCE_GROUP }}
+      TF_STATE_STORAGE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
+      TF_STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Sign in to Azure with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Initialize Terraform
+        run: |
+          terraform -chdir=. init -input=false \
+            -backend-config="resource_group_name=${TF_STATE_RESOURCE_GROUP}" \
+            -backend-config="storage_account_name=${TF_STATE_STORAGE_ACCOUNT}" \
+            -backend-config="container_name=${TF_STATE_CONTAINER}" \
+            -backend-config="key=dev.tfstate" \
+            -backend-config="use_oidc=true" \
+            -backend-config="use_azuread_auth=true"
+
+      - name: Validate Terraform
+        run: |
+          terraform fmt -check -recursive
+          terraform validate
+
+      - name: Plan dev
+        run: terraform plan -input=false -var-file=environments/dev.tfvars -out=dev.tfplan
+
+      - name: Apply dev
+        run: terraform apply -input=false -auto-approve dev.tfplan
+
+  # deploy-production:
+  #   name: Deploy production
+  #   runs-on: ubuntu-latest
+  #   needs: deploy-dev
+  #   environment: production
+  #   env:
+  #     ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  #     ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  #     ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  #     ARM_USE_OIDC: "true"
+  #     TF_STATE_RESOURCE_GROUP: ${{ vars.TF_STATE_RESOURCE_GROUP }}
+  #     TF_STATE_STORAGE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
+  #     TF_STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Set up Terraform
+  #       uses: hashicorp/setup-terraform@v3
+
+  #     - name: Sign in to Azure with OIDC
+  #       uses: azure/login@v2
+  #       with:
+  #         client-id: ${{ vars.AZURE_CLIENT_ID }}
+  #         tenant-id: ${{ vars.AZURE_TENANT_ID }}
+  #         subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+  #     - name: Initialize Terraform
+  #       run: |
+  #         terraform -chdir=. init -input=false \
+  #           -backend-config="resource_group_name=${TF_STATE_RESOURCE_GROUP}" \
+  #           -backend-config="storage_account_name=${TF_STATE_STORAGE_ACCOUNT}" \
+  #           -backend-config="container_name=${TF_STATE_CONTAINER}" \
+  #           -backend-config="key=production.tfstate" \
+  #           -backend-config="use_oidc=true" \
+  #           -backend-config="use_azuread_auth=true"
+
+  #     - name: Validate Terraform
+  #       run: |
+  #         terraform fmt -check -recursive
+  #         terraform validate
+
+  #     - name: Plan production
+  #       run: terraform plan -input=false -var-file=environments/production.tfvars -out=production.tfplan
+
+  #     - name: Apply production
+  #       run: terraform apply -input=false -auto-approve production.tfplan
