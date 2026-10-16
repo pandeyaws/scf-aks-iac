@@ -19,10 +19,9 @@ jobs:
     environment: development
     env:
       ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
-      ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+      ARM_TENANT_ID: ${{ secrets.TEENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
       ARM_USE_OIDC: "true"
-      TF_STATE_RESOURCE_GROUP: ${{ vars.TF_STATE_RESOURCE_GROUP }}
       TF_STATE_STORAGE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
       TF_STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
     steps:
@@ -53,7 +52,7 @@ jobs:
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.CLIENT_ID }}
-          tenant-id: ${{ secrets.TENANT_ID }}
+          tenant-id: ${{ secrets.TEENANT_ID }}
           subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
 
       - name: Initialize Terraform
