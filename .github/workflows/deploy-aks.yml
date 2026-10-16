@@ -32,11 +32,28 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Check deployment configuration
+        shell: bash
+        run: |
+          for setting in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID; do
+            if [[ -z "${!setting}" ]]; then
+              echo "::error::${setting} is empty. Set the matching CLIENT_ID, TENANT_ID, or SUBSCRIPTION_ID secret in the development GitHub environment."
+              exit 1
+            fi
+          done
+
+          for setting in TF_STATE_RESOURCE_GROUP TF_STATE_STORAGE_ACCOUNT TF_STATE_CONTAINER; do
+            if [[ -z "${!setting}" || "${!setting}" == "$setting" ]]; then
+              echo "::error::${setting} is unset or contains its variable name. Set it to the actual Azure Terraform state value in the development GitHub environment."
+              exit 1
+            fi
+          done
+
       - name: Sign in to Azure with OIDC
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.CLIENT_ID }}
-          tenant-id: ${{ secrets.TEENANT_ID }}
+          tenant-id: ${{ secrets.TENANT_ID }}
           subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
 
       - name: Initialize Terraform
