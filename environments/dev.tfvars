@@ -1,5 +1,5 @@
 environment         = "dev"
-resource_group_name = "aks-cluster-dev-eus-01"
+resource_group_name = "rg-aks-dev-eus2-01"
 location            = "eastus"
 cluster_name        = "aks-cluster-dev-eus-02"
 dns_prefix          = "scf-aks-dev"
